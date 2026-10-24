@@ -1,4 +1,4 @@
-# THE HOLY GRAIL
+# THE HOLY GRAIL — VERSION 2
 **Metatron AI — AI-Malware Defense Layer**
 **Locked:** 2026-10-23
 **Mode:** Pristine
@@ -12,26 +12,47 @@ Detect and respond to AI-powered malware — infostealers, agentic RATs, LLM-dri
 
 ---
 
-## 2. FOURTEEN BEHAVIORAL DETECTION RULES
+## 2. TWENTY-FOUR BEHAVIORAL DETECTION RULES
+
+### Category A — Process Execution (Rules 1–8)
 
 1. Non-browser process requesting Steam Community, Telegram, or Discord pages (Vidar/StealC dead-drop resolver)
 2. PowerShell or mshta.exe launched from Run dialog with encoded arguments (Lumma/ClickFix)
 3. New RunMRU registry entries containing PowerShell, mshta, or encoded command syntax
-4. Outbound HTTPS to new/ephemeral .su or .shop domains with POST to unusual paths (Lumma C2 pattern)
-5. SOAP over net.tcp on high ports (RedLine C2 signature)
-6. sqlite3.dll, freebl3.dll, or vcruntime140.dll downloaded from C2 at runtime before browser theft (Vidar tell)
-7. Scheduled task or LaunchAgent with randomized names (AMOS persistence)
-8. Non-browser process reading browser profile folders — Cookies, Login Data, Local Extension Settings
-9. Outbound ZIP upload to unknown host immediately after browser data access
-10. Process spawning cmd.exe or powershell.exe from a signed binary that normally would not (LOLBin abuse)
-11. Bulk access to credential databases — Chrome Login Data, Firefox key4.db, KeePass, 1Password vaults — by a process without a matching parent
+4. Process spawning cmd.exe or powershell.exe from a signed binary that normally would not (LOLBin abuse)
+5. Unusual parent-child: browser spawning Office macro host, or Office spawning browser
+6. Process with no valid digital signature executing from %TEMP%, %APPDATA%, or Downloads
+7. Multiple processes with identical randomized names across different hosts (campaign signature)
+8. Process tree depth exceeding normal user activity — chained loaders spawning loaders
+
+### Category B — Credential Theft (Rules 9–16)
+
+9. Non-browser process reading browser profile folders — Cookies, Login Data, Local Extension Settings
+10. Bulk access to credential databases — Chrome Login Data, Firefox key4.db, KeePass, 1Password vaults — by a process without a matching parent
+11. LSASS access by non-security processes with PROCESS_VM_READ (Sysmon Event ID 10)
 12. AI-agent token theft: processes reading Claude Code, Codex CLI, Grok, Cursor config directories or MCP settings (Warden Stealer pattern)
 13. Clipboard monitoring process that is not a password manager
-14. DNS queries to domains matching known C2 patterns followed by encrypted beacon traffic on non-standard ports
+14. Outbound ZIP upload to unknown host immediately after browser data access
+15. Kerberos ticket requests from non-domain-joined hosts (Golden/Silver Ticket path)
+16. Shadow copy creation followed by file reads of backup artifacts (ransomware staging)
+
+### Category C — Command and Control (Rules 17–20)
+
+17. Outbound HTTPS to new/ephemeral .su, .shop, or .pw domains with POST to unusual paths (Lumma C2 pattern)
+18. SOAP over net.tcp on high ports (RedLine C2 signature)
+19. DNS queries to domains matching known C2 patterns followed by encrypted beacon traffic on non-standard ports
+20. Long-lived outbound connections with low data volume and regular intervals (beaconing)
+
+### Category D — Evasion (Rules 21–24)
+
+21. sqlite3.dll, freebl3.dll, or vcruntime140.dll downloaded from C2 at runtime before browser theft (Vidar tell)
+22. Scheduled task or LaunchAgent with randomized names (AMOS persistence)
+23. AMSI bypass artifacts: PowerShell sessions where AMSI initialization failed or was patched
+24. ETW provider unregistration or consumer removal (wevtutil tampering)
 
 ---
 
-## 3. MEMORY-SCAN SECTION (added 2026-10-23)
+## 3. MEMORY-SCAN SECTION
 
 Behavioral rules catch disk-based and network-visible threats. This section covers what leaves no disk trail.
 
@@ -44,6 +65,8 @@ Behavioral rules catch disk-based and network-visible threats. This section cove
 - **LSASS access:** Non-security processes opening LSASS with PROCESS_VM_READ. Sysmon Event ID 10. This is the classic credential-dumping path.
 - **Browser memory:** Chromium processes holding decrypted cookie material in memory after App-Bound Encryption bypass. Harder to detect; watch for browser processes spawning unusual child threads.
 - **Sleep obfuscation:** Processes that appear idle but have high CPU during short bursts — agentic malware using sleep timers to evade sandbox timeouts.
+- **Thread injection:** Remote thread creation into trusted processes via CreateRemoteThread or NtQueueApcThread.
+- **Token manipulation:** Process token privilege escalation — SeDebugPrivilege, SeImpersonatePrivilege enabled unexpectedly.
 
 ### 3.2 Scan cadence
 
@@ -62,7 +85,7 @@ Memory-resident loaders that self-delete and leave no ETW or Sysmon trail cannot
 
 1. **Isolate** — disconnect the host from network. Do not power off (preserves memory for forensics).
 2. **Snapshot** — capture memory (Volatility-compatible) and disk image before any cleanup.
-3. **Identify** — match observed behavior against the fourteen rules and memory-scan indicators. Assign confidence: High / Medium / Low.
+3. **Identify** — match observed behavior against the twenty-four rules and memory-scan indicators. Assign confidence: High / Medium / Low.
 4. **Kill** — terminate the malicious process tree. Do not delete files yet.
 5. **Block** — add C2 domains, IPs, and file hashes to DNS filter and EDR blocklist.
 6. **Rotate** — from a clean device, change all passwords, revoke all sessions, revoke OAuth tokens, rotate API keys. Stolen cookies survive password changes.
@@ -139,5 +162,5 @@ Run these? Yes / No
 
 ---
 
-**Metatron AI Online. Pristine. The Holy Grail.**
+**Metatron AI Online. Pristine. The Holy Grail v2.**
 Excellence is the minimum standard.
